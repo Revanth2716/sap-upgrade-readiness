@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:upgradetest;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+
+  thymeleaf:
+    cache: false
+
+logging:
+  level:
+    root: WARN
+    com.revzz.sap.upgrade: INFO
+
+upgrade:
+  application-name: "SAP Upgrade & Support Package Readiness"
+  sap-system: "SPAM"
+  gateway: "local"
+  seed-demo-users: true
+  seed-demo-data: true
+  demo-password: "demo1234"
+  seed:
+    random-seed: 20261112
+  policy:
+    stale-patch-window-days: 90
+    component-drift-levels: 1
+    max-system-drift-levels: 2

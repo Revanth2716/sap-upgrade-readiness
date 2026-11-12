@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Changelog')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('changelog')}"></nav>
+
+<div class="page">
+  <div class="page-head">
+    <h1>Support package changelog</h1>
+    <p>What each support package brings — and, more importantly, what it
+      breaks.</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Entries</div>
+      <div class="value" th:text="${entryCount}">0</div>
+      <div class="sub">across every package</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Incompatible changes</div>
+      <div class="value critical" th:text="${breakingCount}">0</div>
+      <div class="sub">the ones that break custom code</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Packages</div>
+      <div class="value" th:text="${#lists.size(packages)}">0</div>
+      <div class="sub">in the landscape</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Support packages</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Package</th><th>Level</th><th>Released</th><th>Description</th>
+            <th>Incompatible changes</th><th></th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="p : ${packages}">
+            <td class="nowrap"><code th:text="${p.spId}">SP07</code></td>
+            <td class="nowrap" th:text="${p.patchLevel}">7</td>
+            <td class="muted small nowrap" th:text="${p.releasedOnDisplay}">WHEN</td>
+            <td th:text="${p.description}">Description</td>
+            <td class="nowrap">
+              <span class="pill status-failed" th:if="${breakingByPackage[p.spId] > 0}"
+                    th:text="${breakingByPackage[p.spId]}">1</span>
+              <span class="muted" th:if="${breakingByPackage[p.spId] == 0}">-</span>
+            </td>
+            <td class="nowrap">
+              <a class="btn small" th:href="@{'/changelog/' + ${p.spId}}">Open</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Every change</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Package</th><th>Component</th><th>Category</th><th>What changed</th></tr></thead>
+        <tbody>
+          <tr th:each="e : ${entries}">
+            <td class="nowrap">
+              <a th:href="@{'/changelog/' + ${e.spId}}" th:text="${e.spId}">SP07</a>
+            </td>
+            <td class="nowrap"><code th:text="${e.componentId}">SAP_ABA</code></td>
+            <td class="nowrap">
+              <span class="pill" th:classappend="${e.category == 'INCOMPATIBLE'} ? 'status-failed'
+                      : (${e.category == 'SECURITY'} ? 'status-warning'
+                      : (${e.category == 'FIX'} ? 'status-ok' : 'status-queued'))"
+                    th:text="${e.category}">FIX</span>
+            </td>
+            <td class="muted small" th:text="${e.entryText}">Text</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

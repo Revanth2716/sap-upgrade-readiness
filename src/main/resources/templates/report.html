@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Report')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('report')}"></nav>
+
+<div class="page">
+  <div class="page-head">
+    <div class="between">
+      <div>
+        <h1>Upgrade readiness report</h1>
+        <p>The document that goes into an upgrade project plan or a risk register.</p>
+      </div>
+      <div class="flex">
+        <a class="btn" th:href="@{/report.md}">Download as Markdown</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Preview <span class="hint" th:text="${lineCount} + ' lines'">0 lines</span></h2>
+    <pre class="code-block" th:text="${markdown}">report</pre>
+  </div>
+</div>
+</body>
+</html>

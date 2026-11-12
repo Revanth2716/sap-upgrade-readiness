@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${pack.spId})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('changelog')}"></nav>
+
+<div class="page" th:with="p=${pack}">
+  <div class="page-head">
+    <div class="between">
+      <div>
+        <h1>
+          <span th:text="${p.spId}">SP07</span>
+          <span class="pill" th:text="'level ' + ${p.patchLevel}">level 7</span>
+        </h1>
+        <p th:text="${p.description} + ' · released ' + ${p.releasedOnDisplay}">Description</p>
+      </div>
+      <a class="btn" th:href="@{/changelog}">All packages</a>
+    </div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Entries</div>
+      <div class="value" th:text="${entryCount}">0</div>
+      <div class="sub">in this package</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Incompatible changes</div>
+      <div class="value critical" th:text="${breakingCount}">0</div>
+      <div class="sub">the ones that break custom code</div>
+    </div>
+  </div>
+
+  <div class="panel" th:if="${breakingCount > 0}">
+    <h2>Read these before the regression window opens</h2>
+    <div class="findings">
+      <div class="finding" th:each="e : ${breaking}">
+        <div class="finding-head">
+          <span class="sev critical">Incompatible</span>
+          <span class="pill" th:text="${e.componentId}">SAP_ABA</span>
+        </div>
+        <div class="finding-message" th:text="${e.entryText}">Text</div>
+        <div class="finding-action">
+          <strong>Do this:</strong>
+          check whether the custom code in this component was tested against the
+          new behaviour, and run the regression on it before the upgrade goes in.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>All changes in <span th:text="${p.spId}">SP07</span></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Component</th><th>Category</th><th>What changed</th></tr></thead>
+        <tbody>
+          <tr th:each="e : ${entries}">
+            <td class="nowrap"><code th:text="${e.componentId}">SAP_ABA</code></td>
+            <td class="nowrap">
+              <span class="pill" th:classappend="${e.category == 'INCOMPATIBLE'} ? 'status-failed'
+                      : (${e.category == 'SECURITY'} ? 'status-warning'
+                      : (${e.category == 'FIX'} ? 'status-ok' : 'status-queued'))"
+                    th:text="${e.category}">FIX</span>
+            </td>
+            <td class="muted small" th:text="${e.entryText}">Text</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${system.systemId})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('overview')}"></nav>
+
+<div class="page" th:with="a=${assessment}, s=${system}">
+  <div class="page-head">
+    <div class="between">
+      <div>
+        <h1>
+          <span th:text="${s.systemId}">PRD</span>
+          <span class="pill" th:text="${s.systemRole}">PRODUCTION</span>
+          <span class="sev" th:classappend="${a.severity.cssClass}"
+                th:text="${a.severity.label}">Status</span>
+        </h1>
+        <p th:text="${s.description} + ' · patch level ' + ${s.patchLevel}
+                   + ' · last patched ' + ${s.lastPatchDisplay} + ' by ' + ${s.patchedBy}">
+          Description</p>
+      </div>
+      <div class="scorebox">
+        <div class="label">Readiness score</div>
+        <div class="value" th:classappend="${a.severity.cssClass()}"
+             th:text="${a.score}">0</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notice notice-ok" th:if="${recorded}">
+    The patch failure has been recorded. The readiness score has been recalculated.
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Patch level</div>
+      <div class="value" th:text="${s.patchLevel}">0</div>
+      <div class="sub">the landscape is on level <span th:text="${a.highestLevel}">0</span></div>
+    </div>
+    <div class="kpi">
+      <div class="label">Drift</div>
+      <div class="value" th:classappend="${a.drift > 2} ? 'critical' : ''"
+           th:text="${a.drift}">0</div>
+      <div class="sub" th:text="${a.driftDisplay}">levels behind</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Blockers</div>
+      <div class="value" th:classappend="${#lists.isEmpty(a.blockers)} ? '' : 'critical'"
+           th:text="${#lists.size(a.blockers)}">0</div>
+      <div class="sub">components that cannot be patched</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Patch failures</div>
+      <div class="value" th:classappend="${#lists.isEmpty(a.errors)} ? '' : 'critical'"
+           th:text="${#lists.size(a.errors)}">0</div>
+      <div class="sub">in the patch log</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Findings</div>
+      <div class="value" th:text="${a.findingCount()}">0</div>
+      <div class="sub">each with an action</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>What is stopping this system</h2>
+    <div class="findings" th:if="${not #lists.isEmpty(a.findings)}">
+      <div class="finding" th:each="f : ${a.findings}">
+        <div class="finding-head">
+          <span class="sev" th:classappend="${f.severity.cssClass}"
+                th:text="${f.severity.label}">Severity</span>
+          <span class="pill" th:text="${f.category}">CATEGORY</span>
+        </div>
+        <div class="finding-message" th:text="${f.message}">Message</div>
+        <div class="finding-action">
+          <strong>Do this:</strong> <span th:text="${f.recommendation}">Action</span>
+        </div>
+      </div>
+    </div>
+    <div class="notice notice-ok" th:if="${#lists.isEmpty(a.findings)}">
+      Nothing is blocking this system - every component is on the level of the
+      system, and the landscape is on the latest patch level.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Component states</h2>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr><th>Component</th><th>Description</th><th>Detail</th><th>Patch level</th>
+            <th>State</th><th>Last changed</th><th>Blocks the upgrade</th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="c : ${a.componentStatuses}">
+            <td class="nowrap"><code th:text="${c.componentId}">SAP_BASIS</code></td>
+            <td class="muted small" th:text="${descriptions[c.componentId]}">Description</td>
+            <td class="muted small nowrap" th:text="${c.statusText}">-</td>
+            <td class="nowrap"><strong th:text="${c.patchLevel}">0</strong></td>
+            <td class="nowrap">
+              <span class="pill" th:classappend="${c.status == 'PATCHED'} ? 'status-ok'
+                      : (${c.status == 'NEW'} ? 'status-queued'
+                      : (${c.status == 'OBSOLETE'} ? 'status-failed' : 'status-error'))"
+                    th:text="${c.status}">PATCHED</span>
+            </td>
+            <td class="muted small nowrap" th:text="${c.lastChangedDisplay}">WHEN</td>
+            <td class="nowrap">
+              <span class="pill status-failed" th:if="${c.blocking}">blocks</span>
+              <span class="muted" th:if="${not c.blocking}">-</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="panel">
+      <h2>Patch log <span class="hint">the failures, newest first</span></h2>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>When</th><th>Component</th><th>Package</th><th>What happened</th></tr></thead>
+          <tbody>
+            <tr th:each="e : ${a.errors}">
+              <td class="muted small nowrap" th:text="${e.atDisplay}">WHEN</td>
+              <td class="nowrap"><code th:text="${e.componentId}">SAP_KERNEL</code></td>
+              <td class="nowrap" th:text="${e.spId}">SP03</td>
+              <td class="muted small" th:text="${e.logText}">Message</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(a.errors)}">
+              <td colspan="4" class="muted center">
+                No patch failure has been recorded for this system.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" th:if="${currentRole == 'UPGRADE_ADMIN'}">
+      <h2>Record a patch failure</h2>
+      <p class="muted small">
+        The failure is the evidence that matters. Until somebody records it,
+        the next upgrade attempt finds out the hard way.
+      </p>
+      <form th:action="@{'/systems/' + ${s.systemId} + '/patch-error'}" method="post">
+        <div class="field">
+          <label for="componentId">Component</label>
+          <select id="componentId" name="componentId">
+            <option th:each="c : ${catalogue}" th:value="${c.componentId}"
+                    th:text="${c.componentId} + ' - ' + ${c.description}">SAP_BASIS</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="spId">Support package</label>
+          <input type="text" id="spId" name="spId" value="SP05" required>
+        </div>
+        <div class="field">
+          <label for="logText">What happened</label>
+          <input type="text" id="logText" name="logText"
+                 placeholder="Component SAP_KERNEL: the update was aborted in the import phase">
+        </div>
+        <button type="submit">Record the failure</button>
+      </form>
+    </div>
+  </div>
+</div>
+</body>
+</html>

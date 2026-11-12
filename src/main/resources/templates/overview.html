@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Readiness')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('overview')}"></nav>
+
+<div class="page">
+  <div class="page-head">
+    <h1>Upgrade readiness</h1>
+    <p>Which system cannot be upgraded, and what exactly is stopping it.</p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Systems</div>
+      <div class="value" th:text="${systemCount}">0</div>
+      <div class="sub">in the landscape</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Critical</div>
+      <div class="value critical" th:text="${criticalCount}">0</div>
+      <div class="sub">cannot be upgraded</div>
+    </div>
+    <div class="kpi">
+      <div class="label">High</div>
+      <div class="value high" th:text="${highCount}">0</div>
+      <div class="sub">needs attention this month</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Blockers</div>
+      <div class="value critical" th:text="${blockerCount}">0</div>
+      <div class="sub">components that cannot be patched</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Average score</div>
+      <div class="value" th:text="${averageScore}">0</div>
+      <div class="sub">across the landscape</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Readiness by system <span class="hint">worst first</span></h2>
+    <div class="chart-wrap" th:utext="${scoreChart}"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Component state matrix
+      <span class="hint">the patch level of every component in every system</span>
+    </h2>
+    <div class="chart-wrap" th:utext="${matrixChart}"></div>
+    <p class="muted small mt">
+      A cell is the patch level of that component in that system. A red cell is
+      a component whose product has been replaced — no patch level fixes it, it
+      has to be migrated.
+    </p>
+  </div>
+
+  <div class="grid cols-2">
+    <div class="panel">
+      <h2>Systems</h2>
+      <div class="scroll">
+        <table>
+          <thead>
+            <tr><th>System</th><th>Description</th><th>Role</th><th>Level</th>
+              <th>Drift</th><th>Last patch</th><th>Score</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="a : ${assessments}">
+              <td class="nowrap">
+                <a th:href="@{'/systems/' + ${a.system.systemId}}"
+                   th:text="${a.system.systemId}">PRD</a>
+              </td>
+              <td th:text="${a.system.description}">Description</td>
+              <td class="nowrap muted small" th:text="${a.system.systemRole}">ROLE</td>
+              <td class="nowrap"><strong th:text="${a.system.patchLevel}">0</strong></td>
+              <td class="nowrap muted small" th:text="${a.drift}">0</td>
+              <td class="muted small nowrap" th:text="${a.system.lastPatchDisplay}">WHEN</td>
+              <td class="nowrap" th:text="${a.score}">0</td>
+              <td class="nowrap">
+                <span class="sev" th:classappend="${a.severity.cssClass}"
+                      th:text="${a.severity.label}">Status</span>
+              </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(assessments)}">
+              <td colspan="8" class="muted center">No systems configured yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Findings <span class="hint">most severe first</span></h2>
+      <div class="findings">
+        <div class="finding" th:each="f : ${findings}">
+          <div class="finding-head">
+            <span class="sev" th:classappend="${f.severity.cssClass}"
+                  th:text="${f.severity.label}">Severity</span>
+            <a class="finding-system" th:href="@{'/systems/' + ${f.systemId}}"
+               th:text="${f.systemId}">PRD</a>
+            <span class="pill" th:text="${f.category}">CATEGORY</span>
+          </div>
+          <div class="finding-message" th:text="${f.message}">Message</div>
+          <div class="finding-action">
+            <strong>Do this:</strong> <span th:text="${f.recommendation}">Action</span>
+          </div>
+        </div>
+        <div class="muted center" th:if="${#lists.isEmpty(findings)}">
+          No findings - every system can be upgraded.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Recent activity</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr th:each="entry : ${audit}">
+            <td class="muted small nowrap" th:text="${entry.atDisplay}">TS</td>
+            <td class="nowrap" th:text="${entry.username}">USER</td>
+            <td class="nowrap"><span class="pill" th:text="${entry.action}">ACTION</span></td>
+            <td class="muted small" th:text="${entry.detail}">DETAIL</td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(audit)}">
+            <td colspan="4" class="muted center">No activity recorded yet.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>
